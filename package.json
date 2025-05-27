@@ -1,0 +1,51 @@
+{
+  "name": "sparesync-backend",
+  "version": "1.0.0",
+  "description": "A scalable and secure Node.js backend for SpareSync — an online platform to browse, filter, and purchase spare parts for gadgets. Built with Express.js, MongoDB (Mongoose), JWT authentication, role-based access, and Razorpay integration. Includes user registration, product catalog, wishlist, orders, admin analytics, and email notifications.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RajKumarPendyala/sparesync.git"
+  },
+  "keywords": [
+    "[",
+    "\"nodejs\"",
+    "\"express\"",
+    "\"mongodb\"",
+    "\"mongoose\"",
+    "\"rest-api\"",
+    "\"ecommerce\"",
+    "\"spare-parts\"",
+    "\"marketplace\"",
+    "\"jwt-authentication\"",
+    "\"razorpay\"",
+    "\"wishlist\"",
+    "\"orders\"",
+    "\"admin-dashboard\"",
+    "\"backend\"",
+    "\"sparesync\"]"
+  ],
+  "author": "Raj Kumar Pendyala",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RajKumarPendyala/sparesync/issues"
+  },
+  "homepage": "https://github.com/RajKumarPendyala/sparesync#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.14.2",
+    "multer": "^1.4.5-lts.2",
+    "nodemailer": "^7.0.3",
+    "path": "^0.12.7",
+    "socket.io": "^4.8.1"
+  }
+}
