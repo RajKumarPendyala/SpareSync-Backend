@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const { deleteUploadedFile } = require('../../utils/fileCleanup');
 const { emailOTP } = require('../../utils/emailOTP');
 const { verifyPassword } = require('../../utils/verifyPassword');
-const { findByPhoneNumber, updateOne, findByEmail, findById, findByAndUpdate, findByRole, createUser, findBy, updateOneSet, findOneAndUpdate } = require('./userService');
+const { findByPhoneNumber, updateOne, findByEmail, findById, findAndUpdate, findByRole, createUser, findBy, updateOneSet, findOneAndUpdate } = require('./userService');
 
 
 exports.register = async (req, res, next) => {
@@ -76,7 +76,6 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    console.log('hellohell');
     const { email, password } = req.body;
 
     const user = await findByEmail(
@@ -154,7 +153,7 @@ exports.editProfileById = async (req, res, next) => {
       city,
       state,
       isDeleted
-    } = req.body;
+    } = req?.body?.updateData;
 
     const updateFields = { isVerified : true };
 
@@ -163,14 +162,20 @@ exports.editProfileById = async (req, res, next) => {
     if (email) updateFields.email = email;
     if (phoneNumber) updateFields.phoneNumber = phoneNumber;
     if (role) updateFields.role = role;
-    if (houseNo) updateFields.houseNo = houseNo;
-    if (street) updateFields.street = street;
-    if (postalCode) updateFields.postalCode = postalCode;
-    if (city) updateFields.city = city;
-    if (state) updateFields.state = state;
     if (isDeleted !== undefined) updateFields.isDeleted = isDeleted;
 
-    const updatedUser = await findByAndUpdate(
+    const address = {};
+    if (houseNo) address.houseNo = houseNo;
+    if (street) address.street = street;
+    if (postalCode) address.postalCode = postalCode;
+    if (city) address.city = city;
+    if (state) address.state = state;
+    
+    if (Object.keys(address).length > 0) {
+      updateFields.address = address;
+    }
+
+    const updatedUser = await findAndUpdate(
       _id,
       updateFields,
       '-_id -passwordHash -isVerified -token -resetTokenExpires -createdAt -updatedAt -__v'

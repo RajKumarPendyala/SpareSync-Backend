@@ -1,5 +1,6 @@
 const SparePart = require('./SparePartModel');
 const Review = require('../review/ReviewModel');
+const mongoose = require('mongoose');
 
 
 exports.createSparePart = async ( addFields ) => {
@@ -21,9 +22,16 @@ exports.find = async (filter, projection = null) => {
         spareParts.map(async (part) => {
           const reviews = await Review.find({ sparePartId: part._id })
             .select('-__v -updatedAt');
+
+          const averageRating = reviews.length
+            ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+            : 0;
+
           return {
             ...part.toObject(),
-            reviews
+            reviews,
+            reviews,
+            averageRating: parseFloat(averageRating.toFixed(1))
           };
         })
     );  

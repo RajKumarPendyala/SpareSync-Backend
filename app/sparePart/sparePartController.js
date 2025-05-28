@@ -109,16 +109,46 @@ exports.editSparePartById = async (req, res, next) => {
 };
 
 
+// exports.getSparePartsWithFilter = async (req, res, next) => {
+//     try{
+//         const { gadgetType, brand } = req.body;
+//         const addedBy = req.user?._id || null;
+//         const role = req.user?.role || null;
+
+//         let filterSpareParts = {};
+
+//         if (brand) filterSpareParts.brand = brand;
+//         if (gadgetType) filterSpareParts.gadgetType = gadgetType;
+//         if(role === "seller"){
+//             if (addedBy) filterSpareParts.addedBy = addedBy;
+//         }
+//         filterSpareParts.isDeleted = false;
+
+//         const spareParts = await find(
+//             filterSpareParts,
+//             '-createdAt -updatedAt -__v'
+//         );
+
+//         res.status(200).json({
+//             message: 'Spare parts fetched successfully',
+//             SpareParts : spareParts || []
+//         });
+
+//     }catch (error) {
+//         next(error);
+//     }
+// }
+
+
+
 exports.getSparePartsWithFilter = async (req, res, next) => {
+
     try{
-        const { gadgetType, brand } = req.body;
         const addedBy = req.user?._id || null;
         const role = req.user?.role || null;
 
         let filterSpareParts = {};
 
-        if (brand) filterSpareParts.brand = brand;
-        if (gadgetType) filterSpareParts.gadgetType = gadgetType;
         if(role === "seller"){
             if (addedBy) filterSpareParts.addedBy = addedBy;
         }
