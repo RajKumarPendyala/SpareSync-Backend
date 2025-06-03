@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const { deleteUploadedFile } = require('../../utils/fileCleanup');
 const { emailOTP } = require('../../utils/emailOTP');
 const { verifyPassword } = require('../../utils/verifyPassword');
-const { findByPhoneNumber, updateOne, findByEmail, findById, findAndUpdate, findByRole, createUser, findBy, updateOneSet, findOneAndUpdate } = require('./userService');
+const { updateOne, findByEmail, findById, findAndUpdate, findByRole, createUser, findBy, updateOneSet, findOneAndUpdate } = require('./userService');
 
 
 exports.register = async (req, res, next) => {
@@ -23,11 +23,6 @@ exports.register = async (req, res, next) => {
 
     if ( !( role === "buyer" || role === "seller" ) ) {
       return res.status(400).json({ message: 'Role must be "seller" or "buyer".' });
-    }
-    
-    const existingUser = await findByPhoneNumber({ phoneNumber });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Phone number already exists' });
     }
 
     const saltRounds = 10;
@@ -274,7 +269,7 @@ exports.sendOtpToEmail = async(req, res, next) => {
     if(!token) {
       res.status(500).json({ message: 'Failed to send OTP.' });
     }
-    
+
     const resetTokenExpires = new Date(Date.now() + 2 * 60 * 1000);
     
     if (existingUser){
@@ -292,13 +287,13 @@ exports.sendOtpToEmail = async(req, res, next) => {
       
       if(result) return res.status(200).json({ message: 'OTP sent successfully.' });
     }
-
+    // console.log(result);
     const result = await createUser(email, token, resetTokenExpires);
-
+    // console.log('Result',result);
     if(result) return res.status(200).json({ message: 'OTP sent successfully.' });
     return res.status(400).json({ message: 'Failed to sent OTP.' });
   }catch (error) {
-    next(err);
+    next(error);
   }
 }
 

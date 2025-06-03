@@ -1,4 +1,5 @@
 const Cart = require('./CartModel');
+const mongoose = require('mongoose');
 const SparePart = require('../sparePart/SparePartModel');
 
 exports.findSparePart = async (filter, projection = null) => {
@@ -9,16 +10,26 @@ exports.findCart = async (filter, projection = null) => {
     return await Cart.findOne( filter ).select(projection);
 }
 
+exports.getCart = async (filter, projection = null) => {
+    return await Cart.findOne(filter)
+        .select(projection)
+        .populate('items.sparePartId');  // Populate sparePartId to get full part info
+};
+
 exports.createCart = async (userId, sparePartId, sparePart) => {
     const cart = new Cart({
         userId,
         items: [{
           sparePartId,
           subTotal : sparePart.price,
-          subTotalDiscount: sparePart.discount || 0
+          subTotalDiscount: mongoose.Types.Decimal128.fromString(
+             ((parseFloat(sparePart.price?.toString() || '0') * parseFloat(sparePart.discount?.toString() || '0')) / 100).toFixed(2)
+            ) 
         }],
         totalAmount: sparePart.price,
-        discountAmount: sparePart.discount || 0
+        discountAmount: mongoose.Types.Decimal128.fromString(
+            ((parseFloat(sparePart.price?.toString() || '0') * parseFloat(sparePart.discount?.toString() || '0')) / 100).toFixed(2)
+           ) 
     });
     return await cart.save();
 }
@@ -61,8 +72,8 @@ exports.updateCartItemQuantity = async(userId, sparePartId, quantity) => {
     if (!cart) throw new Error("Cart not found");
   
     const itemIndex = cart.items.findIndex(item =>
-      item.sparePartId.toString() === sparePartId
-    );
+       item.sparePartId.toString() === sparePartId.toString()
+    );      
   
     if (itemIndex === -1) throw new Error("Item not found in cart");
   
@@ -73,11 +84,11 @@ exports.updateCartItemQuantity = async(userId, sparePartId, quantity) => {
     const discount = parseFloat(sparePart.discount?.toString() || '0');
 
     const subTotal = price * quantity;
-    const subTotalDiscount = discount * quantity;
+    const subTotalDiscount = ((price * discount) / 100) * quantity;    
   
     cart.items[itemIndex].quantity = quantity;
-    cart.items[itemIndex].subTotal = subTotal;
-    cart.items[itemIndex].subTotalDiscount = subTotalDiscount;
+    cart.items[itemIndex].subTotal = mongoose.Types.Decimal128.fromString(subTotal.toFixed(2));
+    cart.items[itemIndex].subTotalDiscount = mongoose.Types.Decimal128.fromString(subTotalDiscount.toFixed(2));    
   
     let totalAmount = 0;
     let discountAmount = 0;
@@ -87,8 +98,8 @@ exports.updateCartItemQuantity = async(userId, sparePartId, quantity) => {
       discountAmount += parseFloat(item.subTotalDiscount?.toString() || '0');
     });
   
-    cart.totalAmount = totalAmount;
-    cart.discountAmount = discountAmount;
+    cart.totalAmount = mongoose.Types.Decimal128.fromString(totalAmount.toFixed(2));
+    cart.discountAmount = mongoose.Types.Decimal128.fromString(discountAmount.toFixed(2));
   
     await cart.save();
     return cart;

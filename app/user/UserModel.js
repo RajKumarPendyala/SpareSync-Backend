@@ -22,7 +22,6 @@ const userSchema = new mongoose.Schema({
   },
   phoneNumber: { 
     type: Number, 
-    unique: true, 
     validate: {
       validator: (v) => /^[0-9]{10}$/.test(v), // Simple numeric validation
       message: props => `${props.value} is not a valid phone number!`

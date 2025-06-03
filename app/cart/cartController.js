@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { findSparePart, createCart, findCart, findItem, removeItemFromCart, updateCartItemQuantity } = require('./cartService');
+const { findSparePart, createCart, findCart, findItem, removeItemFromCart, updateCartItemQuantity, getCart } = require('./cartService');
 
 
 exports.addItem = async (req, res, next) => {
@@ -25,15 +25,20 @@ exports.addItem = async (req, res, next) => {
           (parseFloat(sparePart.price?.toString() || '0') * existingItem.quantity).toFixed(2)
         );
         existingItem.subTotalDiscount = mongoose.Types.Decimal128.fromString(
-          (parseFloat(sparePart.discount?.toString() || '0') * existingItem.quantity).toFixed(2)
+          (((parseFloat(sparePart.price?.toString() || '0') * parseFloat(sparePart.discount?.toString() || '0')) / 100) * existingItem.quantity).toFixed(2)
         );
       } 
       else {
+        const price = parseFloat(sparePart.price?.toString() || '0');
+        const discount = parseFloat(sparePart.discount?.toString() || '0');
+        const subTotalDiscount = ((price * discount) / 100).toFixed(2);
         cart.items.push({
           sparePartId,
           quantity: 1,
           subTotal : sparePart.price,
-          subTotalDiscount: sparePart.discount || 0 
+          subTotalDiscount: mongoose.Types.Decimal128.fromString(
+            ((parseFloat(sparePart.price?.toString() || '0') * parseFloat(sparePart.discount?.toString() || '0')) / 100).toFixed(2)
+          )          
         });
       }
 
@@ -62,7 +67,7 @@ exports.getItems = async (req, res, next) => {
   try {
     const userId = req.user?._id;
 
-    let cartData = await findCart(
+    let cartData = await getCart(
       { userId },
       '-_id -userId -__v'
     );
@@ -98,7 +103,7 @@ exports.removeItems = async(req, res, next) => {
     if(result) {
       return res.status(200).json({
         message: 'Item removed from cart',
-        data: result
+        result
       });
     }
     res.status(400).json({
@@ -120,7 +125,7 @@ exports.updateItem = async(req, res, next) => {
     if(updatedCart){
       return res.status(200).json({
         message: 'Cart item updated',
-        data: updatedCart
+        updatedCart
       });
     }
     res.status(400).json({
