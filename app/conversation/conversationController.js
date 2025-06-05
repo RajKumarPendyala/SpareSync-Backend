@@ -25,17 +25,17 @@ exports.sendMessage = async (req, res, next) => {
 
 exports.getConversation = async (req, res, next) => {
     try {
-      const userId1 = req.user?._id;
-      const userId2 = req.body?.id;
+      const currentUser = req.user._id;
+      const conversationId = req.query?.conversationId;
   
-      if (!userId2) {
-        return res.status(400).json({ message: 'Other user ID is required' });
+      if (!conversationId) {
+        return res.status(400).json({ message: 'Conversation ID is required' });
       }
 
-      const conversation = await getConversation(userId1, userId2);
-      
+      const conversation = await getConversation(conversationId);
+
       if(conversation){
-        return res.status(200).json({ conversation });
+        return res.status(200).json({ conversation, currentUser });
       }
       res.status(404).json({ message : 'Conversation not found' });
     } catch (error) {
@@ -75,7 +75,7 @@ exports.getConversations = async (req, res) => {
     const conversations = await getConversations({ userId });
 
     if(conversations){
-      return res.status(200).json(conversations);
+      return res.status(200).json({ conversations : conversations, userId : userId});
     }
     res.status(404).json({ message : 'Conversations not found' });
   } catch (err) {

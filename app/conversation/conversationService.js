@@ -28,11 +28,11 @@ exports.sendMessage = async (senderId, receiverId, text) => {
 
 
 
-exports.getConversation = async (userId1, userId2) => {
+exports.getConversation = async (conversationId) => {
     const conversation = await Conversation.findOne({
-      participants: { $all: [userId1, userId2] },
+      _id: conversationId,
       isDeleted: false
-    }).populate('participants', 'name email') 
+    }).populate('participants', 'name image') 
   
     return conversation;
 };
@@ -63,7 +63,7 @@ exports.getConversations = async ({ userId }) => {
     isDeleted: false
   })
     .sort({ updatedAt: -1 })
-    .populate('participants', 'name email')
+    .populate('participants', 'name image')
     .lean();
 
 

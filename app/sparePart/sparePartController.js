@@ -1,5 +1,4 @@
 const SparePart = require('./SparePartModel');
-const { deleteUploadedFile } = require('../../utils/fileCleanup');
 const { createSparePart, findByIdAndUpdate, find } = require('./sparePartService');
 
 
@@ -16,10 +15,10 @@ exports.addSparePart = async (req, res, next) => {
       color,
       brand,
       gadgetType,
-      warrentyPeriod
+      warrentyPeriod,
+      imagePaths,
     } = req.body;
     const addedBy = req.user?._id;
-    const imagePaths = req.files?.length ? req.files?.map(file => ({ path: `/uploads/${file.filename}` })) : [];
 
     const addFields = {};
 
@@ -44,7 +43,6 @@ exports.addSparePart = async (req, res, next) => {
     });
 
   } catch (error) {
-    if(req.file?.length) deleteUploadedFile(req.file);
     next(error)
   }
 };
@@ -65,9 +63,9 @@ exports.editSparePartById = async (req, res, next) => {
             brand,
             gadgetType,
             warrentyPeriod,
-            isDeleted
+            isDeleted,
+            imagePaths,
         } = req.body;
-        const imagePaths = req.files?.map(file => ({ path: `/uploads/${file.filename}` }));
 
         const updateFields = {};
 
@@ -103,7 +101,6 @@ exports.editSparePartById = async (req, res, next) => {
         });
 
     }catch (error) {
-        if(req.file?.length) deleteUploadedFile(req.file);
         next(error);
     }
 };

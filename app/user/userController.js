@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 const bcrypt = require('bcrypt');
-const { deleteUploadedFile } = require('../../utils/fileCleanup');
 const { emailOTP } = require('../../utils/emailOTP');
 const { verifyPassword } = require('../../utils/verifyPassword');
 const { updateOne, findByEmail, findById, findAndUpdate, findByRole, createUser, findBy, updateOneSet, findOneAndUpdate } = require('./userService');
@@ -123,7 +122,7 @@ exports.getProfileById = async (req, res, next) => {
     if (!user || user.isDeleted) {
       return res.status(404).json({ message: 'User not found.' });
     }
-  
+
     return res.status(200).json({
       user
     });  
@@ -136,7 +135,7 @@ exports.getProfileById = async (req, res, next) => {
 exports.editProfileById = async (req, res, next) => {
   try{
     const _id = req.user?._id;
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    
     const {
       name,
       email,
@@ -147,7 +146,8 @@ exports.editProfileById = async (req, res, next) => {
       postalCode,
       city,
       state,
-      isDeleted
+      isDeleted,
+      imagePath,
     } = req?.body?.updateData;
 
     const updateFields = { isVerified : true };
@@ -189,7 +189,6 @@ exports.editProfileById = async (req, res, next) => {
       user : updatedUser
     });
   } catch (err) {
-    if(req.file) deleteUploadedFile(req.file);
     next(err);
   }
 };
@@ -287,9 +286,9 @@ exports.sendOtpToEmail = async(req, res, next) => {
       
       if(result) return res.status(200).json({ message: 'OTP sent successfully.' });
     }
-    // console.log(result);
+
     const result = await createUser(email, token, resetTokenExpires);
-    // console.log('Result',result);
+
     if(result) return res.status(200).json({ message: 'OTP sent successfully.' });
     return res.status(400).json({ message: 'Failed to sent OTP.' });
   }catch (error) {

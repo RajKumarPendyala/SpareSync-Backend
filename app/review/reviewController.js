@@ -4,8 +4,8 @@ const { deleteUploadedFile } = require('../../utils/fileCleanup');
 exports.createReview = async (req, res, next) => {
   try {
     const userId = req.user?._id; 
-    const { sparePartId, rating, comment } = req.body;
-    const imagePaths = req.files?.length ? req.files?.map(file => ({ path: `/uploads/${file.filename}` })) : [];
+    const { sparePartId, rating, comment, imagePaths} = req.body;
+    // const imagePaths = req.files?.length ? req.files?.map(file => ({ path: `/uploads/${file.filename}` })) : [];
 
     const review = await createReview({
       _id : userId,
