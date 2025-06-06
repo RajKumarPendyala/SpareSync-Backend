@@ -1,6 +1,5 @@
 const SparePart = require('./SparePartModel');
 const Review = require('../review/ReviewModel');
-const mongoose = require('mongoose');
 
 
 exports.createSparePart = async ( addFields ) => {

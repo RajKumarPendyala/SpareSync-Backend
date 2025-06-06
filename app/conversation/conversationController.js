@@ -2,8 +2,13 @@ const { sendMessage, getConversation, deleteConversation, getConversations } = r
 
 exports.sendMessage = async (req, res, next) => {
   try {
-    const senderId = req.user._id;
-    const { receiverId, text } = req.body;
+    let senderId = req.user._id;
+    let { receiverId, text, senderId2 } = req.body;
+
+    if (senderId2) {
+      receiverId = senderId;
+      senderId = senderId2;
+    }
 
     const conversation = await sendMessage(senderId, receiverId, text);
 

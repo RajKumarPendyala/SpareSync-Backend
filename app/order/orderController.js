@@ -3,7 +3,10 @@ const { placeOrderFromCart, getOrdersByUser, cancelOrder, getPlatformOrders, upd
 exports.placeOrder = async(req, res, next) => {
   try {
     const userId = req.user?._id;
-    const { paymentMethod, transactionId } = req.body;
+    // const { paymentMethod, transactionId } = req.body;
+
+    const paymentMethod = 'DigitalWallet';
+    const transactionId = userId;
 
     const order = await placeOrderFromCart(userId, paymentMethod, transactionId);
 
@@ -30,7 +33,7 @@ exports.getOrders = async(req, res, next) => {
     if(orders){
         return res.status(200).json({
             message: 'Orders fetched successfully',
-            data: orders
+            orders
         });
     }
     res.status(400).json({

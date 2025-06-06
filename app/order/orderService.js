@@ -2,7 +2,6 @@ const Cart = require('../cart/CartModel');
 const Order = require('./OrderModel');
 const SparePart = require('../sparePart/SparePartModel');
 const FinancialReport = require('../financialReport/FinancialReportModel');
-const mongoose = require('mongoose');
 
 exports.placeOrderFromCart = async(userId, paymentMethod, transactionId) => {
   const cart = await Cart.findOne({ userId }).lean(); // gets a plain js obj, not a Mongoose doc
@@ -35,7 +34,7 @@ exports.placeOrderFromCart = async(userId, paymentMethod, transactionId) => {
 
 
 exports.getOrdersByUser = async(userId) => {
-    return await Order.find({ userId }).select('-userId -__v').sort({ createdAt: -1 });
+    return await Order.find({ userId }).select('-userId -__v').sort({ createdAt: -1 }).populate('items.sparePartId', 'name');
 }
 
 
