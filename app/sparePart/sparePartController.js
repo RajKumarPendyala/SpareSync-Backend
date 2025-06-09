@@ -26,7 +26,7 @@ exports.addSparePart = async (req, res, next) => {
     if (description) addFields.description = description;
     if (price) addFields.price = price;
     if (discount) addFields.discount = discount;
-    if (quantity) addFields.quantity = quantity;
+    if (quantity !== undefined && quantity !== null) addFields.quantity = quantity;
     if (weight) addFields.weight = weight;
     if (dimension) addFields.dimension = dimension;
     if (color) addFields.color = color;
@@ -36,10 +36,11 @@ exports.addSparePart = async (req, res, next) => {
     if (addedBy) addFields.addedBy = addedBy;
     if (imagePaths.length) addFields.images = imagePaths;
 
-    await  createSparePart(addFields);
+    const createdSparePart = await  createSparePart(addFields);
     
     res.status(201).json({
-      message: 'Added spare part successfully'
+      message: 'Added spare part successfully',
+      createdSparePart
     });
 
   } catch (error) {
@@ -73,7 +74,7 @@ exports.editSparePartById = async (req, res, next) => {
         if (description) updateFields.description = description;
         if (price) updateFields.price = price;
         if (discount) updateFields.discount = discount;
-        if (quantity) updateFields.quantity = quantity;
+        if (quantity !== undefined && quantity !== null) updateFields.quantity = quantity;
         if (weight) updateFields.weight = weight;
         if (dimension) updateFields.dimension = dimension;
         if (color) updateFields.color = color;

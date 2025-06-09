@@ -11,9 +11,9 @@ router.get('/', sparePartController.getSparePartsWithFilter);
 
 router.get('/seller', authMiddleware, isSeller, sparePartController.getSparePartsWithFilter);
 router.post('/seller', authMiddleware, isSeller, sparePartController.addSparePart);
-router.patch('/seller', authMiddleware, isSeller, sparePartController.editSparePartById);
+router.patch('/', authMiddleware, isSeller, sparePartController.editSparePartById);
 
-router.patch('/admin', authMiddleware, isAdmin, sparePartController.editSparePartById);
+router.patch('/', authMiddleware, isAdmin, sparePartController.editSparePartById);
 
 
 module.exports = router;

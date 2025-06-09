@@ -34,7 +34,7 @@ exports.placeOrderFromCart = async(userId, paymentMethod, transactionId) => {
 
 
 exports.getOrdersByUser = async(userId) => {
-    return await Order.find({ userId }).select('-userId -__v').sort({ createdAt: -1 }).populate('items.sparePartId', 'name');
+    return await Order.find({ userId }).select('-userId -__v').sort({ createdAt: -1 }).populate('items.sparePartId'); 
 }
 
 

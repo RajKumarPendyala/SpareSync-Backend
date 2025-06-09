@@ -15,23 +15,23 @@ exports.findByIdAndUpdate = async(filter, updateFields, projection = null) => {
 }
 
 exports.find = async (filter, projection = null) => {
-    const spareParts = await SparePart.find( filter ).select(projection);
+  const spareParts = await SparePart.find( filter ).sort({ createdAt: -1 }).select(projection);
 
-    return await Promise.all(
-        spareParts.map(async (part) => {
-          const reviews = await Review.find({ sparePartId: part._id })
-            .select('-__v -updatedAt');
+  return await Promise.all(
+    spareParts.map(async (part) => {
+      const reviews = await Review.find({ sparePartId: part._id }).sort({ createdAt: -1 })
+        .select('-__v -updatedAt');
 
-          const averageRating = reviews.length
-            ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-            : 0;
+      const averageRating = reviews.length
+        ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+        : 0;
 
-          return {
-            ...part.toObject(),
-            reviews,
-            reviews,
-            averageRating: parseFloat(averageRating.toFixed(1))
-          };
-        })
-    );  
+      return {
+        ...part.toObject(),
+        reviews,
+        reviews,
+        averageRating: parseFloat(averageRating.toFixed(1))
+      };
+    })
+  );  
 }

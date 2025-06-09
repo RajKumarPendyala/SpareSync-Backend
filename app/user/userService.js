@@ -1,7 +1,7 @@
 const User = require('./UserModel');
 
 const findBy = async (filter, projection = null) => {
-    return await User.findOne( filter ).select(projection);
+    return await User.findOne( filter ).sort({ createdAt: -1 }).select(projection);
 }
 
 exports.updateOne = async(filter, updateFields, removeFields) =>{
