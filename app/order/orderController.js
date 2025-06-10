@@ -27,8 +27,9 @@ exports.placeOrder = async(req, res, next) => {
 exports.getOrders = async(req, res, next) => {
   try {
     const userId = req.user?._id;
+    const shipmentStatus = req.query.status;
 
-    const orders = await getOrdersByUser(userId);
+    const orders = await getOrdersByUser(userId, shipmentStatus);
 
     if(orders){
         return res.status(200).json({
@@ -73,14 +74,14 @@ exports.updateOrder = async(req, res, next) => {
 
 exports.viewPlatformOrders = async(req, res, next) => {
   try {
-    const { shipmentStatus } = req.body;
+    const shipmentStatus = req.query.status;
 
     const orders = await getPlatformOrders(shipmentStatus);
 
     if(orders){
         return res.status(200).json({
             message: 'Orders fetched successfully',
-            data: orders
+            orders
         });
     }
     res.status(400).json({

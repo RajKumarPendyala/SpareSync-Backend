@@ -11,7 +11,7 @@ router.get('/', authMiddleware, isBuyer, orderController.getOrders);
 router.patch('/', authMiddleware, isBuyer, orderController.updateOrder);
 
 router.get('/admin', authMiddleware, isAdmin, orderController.viewPlatformOrders);
-router.patch('/admin', authMiddleware, isAdmin, orderController.updateOrderStatus);//
+router.patch('/admin', authMiddleware, isAdmin, orderController.updateOrderStatus);
 
 
 module.exports = router;

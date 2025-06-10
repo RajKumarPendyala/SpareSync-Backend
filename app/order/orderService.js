@@ -33,8 +33,14 @@ exports.placeOrderFromCart = async(userId, paymentMethod, transactionId) => {
 }
 
 
-exports.getOrdersByUser = async(userId) => {
-    return await Order.find({ userId }).select('-userId -__v').sort({ createdAt: -1 }).populate('items.sparePartId'); 
+exports.getOrdersByUser = async(userId, shipmentStatus) => {
+  const filter = {};
+  if (shipmentStatus) {
+    filter.shipmentStatus = shipmentStatus;
+    filter.userId = userId;
+  }
+    
+  return await Order.find(filter).select('-userId -__v').sort({ createdAt: -1 }).populate('items.sparePartId'); 
 }
 
 
@@ -62,7 +68,7 @@ exports.getPlatformOrders = async(shipmentStatus) => {
     filter.shipmentStatus = shipmentStatus;
   }
 
-  const orders = await Order.find(filter).select('-userId -__v').sort({ createdAt: -1 });
+  const orders = await Order.find(filter).select('-userId -__v').sort({ createdAt: -1 }).populate('items.sparePartId'); 
 
   return orders;
 }
