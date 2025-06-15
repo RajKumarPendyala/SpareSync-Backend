@@ -4,6 +4,10 @@ const findBy = async (filter, projection = null) => {
     return await User.findOne( filter ).sort({ createdAt: -1 }).select(projection);
 }
 
+exports.findByRole = async (filter, projection = null) => {
+    return await User.find( filter ).sort({ createdAt: -1 }).select(projection);
+}
+
 exports.updateOne = async(filter, updateFields, removeFields) =>{
     return await User.updateOne(
         filter,
@@ -53,5 +57,4 @@ exports.createUser = async (email, token, resetTokenExpires) => {
 exports.findByPhoneNumber = findBy;
 exports.findByEmail = findBy;
 exports.findById = findBy;
-exports.findByRole = findBy;
 exports.findBy = findBy;

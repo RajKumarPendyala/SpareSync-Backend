@@ -68,7 +68,7 @@ exports.getPlatformOrders = async(shipmentStatus) => {
     filter.shipmentStatus = shipmentStatus;
   }
 
-  const orders = await Order.find(filter).select('-userId -__v').sort({ createdAt: -1 }).populate('items.sparePartId'); 
+  const orders = await Order.find(filter).select('-userId -__v').sort({ createdAt: -1 }).populate('items.sparePartId userId'); 
 
   return orders;
 }
@@ -90,7 +90,9 @@ exports.updateOrderStatus = async(orderId, shipmentStatus) => {
         { new: true, runValidators: true }
       );
     }
+  }
 
+  if (shipmentStatus === "delivered" ) {
     const totalAmount = parseFloat(order.totalAmount?.toString() || "0");
     const discount = parseFloat(order.discountAmount?.toString() || "0");
     const netProfit = totalAmount - discount;

@@ -22,7 +22,7 @@ exports.getCompleteFinancialReport = async (req, res, next) => {
 
 exports.getMonthlyFinancialReport = async (req, res, next) => {
   try {
-    const { year, month } = req.body;
+    const { year, month } = req.query;
 
     if (!year || !month) {
       return res.status(400).json({
@@ -49,7 +49,7 @@ exports.getMonthlyFinancialReport = async (req, res, next) => {
 
 exports.getYearlyFinancialReport = async (req, res, next) => {
   try {
-    const { year } = req.body;
+    const { year } = req.query;
 
     if (!year) {
       return res.status(400).json({ message: 'Year is required as query parameter' });

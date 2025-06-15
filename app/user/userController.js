@@ -196,7 +196,7 @@ exports.editProfileById = async (req, res, next) => {
 
 exports.getUsersWithFilter = async (req, res, next) => {
   try {
-    const { role } = req.body;
+    const { role } = req.query;
 
     const filter = {
       isDeleted: false,
@@ -227,7 +227,7 @@ exports.editUserById = async(req, res, next) => {
   try{
     const { _id, isDeleted } = req.body;
 
-    const updatedUser = await findByAndUpdate(
+    const updatedUser = await findAndUpdate(
       _id,
       { isDeleted },
       '-_id -passwordHash -token -resetTokenExpires -__v'
