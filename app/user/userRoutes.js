@@ -15,6 +15,7 @@ router.patch('/reset-password', userController.updateUserPassword);
 router.patch('/change-password', authMiddleware, userController.updateUserPassword);
 router.post('/verify-email', userController.verifyEmail);
 router.post('/otp', userController.sendOtpToEmail); //resend
+router.patch('/walletc', authMiddleware, userController.credit);
 
 //admin
 router.get('/', authMiddleware, isAdmin, userController.getUsersWithFilter);

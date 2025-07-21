@@ -2,13 +2,23 @@ const Cart = require('../cart/CartModel');
 const Order = require('./OrderModel');
 const SparePart = require('../sparePart/SparePartModel');
 const FinancialReport = require('../financialReport/FinancialReportModel');
+const mongoose = require('mongoose');
+const User = require('../user/UserModel');
+const adminId = process.env.ADMIN_USER_ID;
 
-exports.placeOrderFromCart = async(userId, paymentMethod, transactionId) => {
-  const cart = await Cart.findOne({ userId }).lean(); // gets a plain js obj, not a Mongoose doc
+exports.placeOrderFromCart = async (session, userId, paymentMethod, transactionId) => {
 
+  const cart = await Cart.findOne({ userId }).session(session);
   if (!cart || !cart.items || cart.items.length === 0) {
     throw new Error('Cart is empty or not found');
   }
+
+  const fAmount = (
+    parseFloat(cart.totalAmount?.toString() || "0") -
+    parseFloat(cart.discountAmount?.toString() || "0")
+  ).toFixed(2);
+
+  await transaction(session, userId, adminId, fAmount);
 
   const orderData = {
     userId,
@@ -22,15 +32,16 @@ exports.placeOrderFromCart = async(userId, paymentMethod, transactionId) => {
     transactionId,
     totalAmount: cart.totalAmount || 0,
     discountAmount: cart.discountAmount || 0,
-    finalAmount: (parseFloat(cart.totalAmount?.toString() || "0") - parseFloat(cart.discountAmount?.toString() || "0")).toFixed(2)
+    finalAmount: fAmount
   };
 
-  const order = await Order.create(orderData);
+  const order = await Order.create([orderData], { session }); // use array when using session
 
-  await Cart.deleteOne({ userId });
+  await Cart.deleteOne({ userId }).session(session);
 
-  return order;
-}
+  return order[0]; // since we used create([...])
+};
+
 
 
 exports.getOrdersByUser = async(userId, shipmentStatus) => {
@@ -44,8 +55,8 @@ exports.getOrdersByUser = async(userId, shipmentStatus) => {
 }
 
 
-exports.cancelOrder = async(userId, orderId) => {
-  const order = await Order.findOne({ _id: orderId, userId });
+exports.cancelOrder = async(session, userId, orderId) => {
+  const order = await Order.findOne({ _id: orderId, userId }).session(session);
 
   if (!order) {
     throw new Error('Order not found or does not belong to the user');
@@ -55,8 +66,12 @@ exports.cancelOrder = async(userId, orderId) => {
     throw new Error(`Cannot cancel order that is already ${order.shipmentStatus}`);
   }
 
+  const fAmount = order.finalAmount;
+
+  await transaction(session, adminId, userId, fAmount);
+
   order.shipmentStatus = 'cancelled';
-  await order.save();
+  await order.save({ session });
 
   return order;
 }
@@ -75,12 +90,18 @@ exports.getPlatformOrders = async(shipmentStatus) => {
 
 
 
-exports.updateOrderStatus = async(orderId, shipmentStatus) => {
-  const order = await Order.findById(orderId);
+exports.updateOrderStatus = async(session, orderId, shipmentStatus) => {
+  const order = await Order.findById(orderId).session(session);
   if (!order) throw new Error("Order not found");
 
   order.shipmentStatus = shipmentStatus;
-  await order.save();
+  await order.save({session});
+
+  if (shipmentStatus === "cancelled") {
+    const fAmount = order.finalAmount;
+    const userId = order.userId;
+    await transaction(session, adminId, userId, fAmount);
+  }
 
   if (shipmentStatus === "shipped" || shipmentStatus === "delivered" ) {
     for (const item of order.items) {
@@ -93,6 +114,7 @@ exports.updateOrderStatus = async(orderId, shipmentStatus) => {
   }
 
   if (shipmentStatus === "delivered" ) {
+
     const totalAmount = parseFloat(order.totalAmount?.toString() || "0");
     const discount = parseFloat(order.discountAmount?.toString() || "0");
     const netProfit = totalAmount - discount;
@@ -102,6 +124,51 @@ exports.updateOrderStatus = async(orderId, shipmentStatus) => {
       totalOrders: 1,
       netProfit
     });
+
+    for (const item of order.items) {
+      const sparePart = await SparePart.findById(item.sparePartId).select('addedBy price');
+
+      if (!sparePart || !sparePart.addedBy) continue;
+
+      const sellerId = sparePart.addedBy.toString();
+      const quantity = item.quantity || 0;
+      const price = parseFloat(sparePart.price?.toString() || "0");
+
+      const grossAmount = quantity * price;
+      const platformFee = grossAmount * 0.10;
+      const sellerAmount = parseFloat((grossAmount - platformFee).toFixed(2));
+
+      await transaction(session, adminId, sellerId, sellerAmount);
+    }
   }
   return order;
+}
+
+
+
+
+const transaction = async (session, senderId, receiverId, amount) => {
+
+  const { Decimal128 } = mongoose.Types;
+
+  const sender = await User.findById(senderId).session(session);
+  const receiver = await User.findById(receiverId).session(session);
+
+  if (!sender || !receiver) {
+    throw new Error('Sender or Receiver not found');
+  }
+
+  const senderWallet = parseFloat(sender.walletAmount.toString());
+  const receiverWallet = parseFloat(receiver.walletAmount.toString());
+  const debitAmount = parseFloat(amount);
+
+  if (senderWallet < debitAmount) {
+    throw new Error('Insufficient wallet balance');
+  }
+
+  sender.walletAmount = Decimal128.fromString((senderWallet - debitAmount).toFixed(2));
+  receiver.walletAmount = Decimal128.fromString((receiverWallet + debitAmount).toFixed(2));
+
+  await sender.save({ session });
+  await receiver.save({ session });
 }

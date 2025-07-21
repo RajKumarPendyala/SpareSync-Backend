@@ -47,6 +47,11 @@ const userSchema = new mongoose.Schema({
     city: { type: String },
     state: { type: String }
   },
+  walletAmount:{
+    type: mongoose.Types.Decimal128,
+    default: mongoose.Types.Decimal128.fromString("0"),
+    min: [0, 'Wallet amount must be zero or positive']
+  },
   isDeleted: {
     type: Boolean, 
     default: false, 

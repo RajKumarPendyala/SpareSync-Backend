@@ -1,25 +1,37 @@
 const { placeOrderFromCart, getOrdersByUser, cancelOrder, getPlatformOrders, updateOrderStatus } = require('./orderService');
+const mongoose = require('mongoose');
+
 
 exports.placeOrder = async(req, res, next) => {
+  const session = await mongoose.startSession();
   try {
+    session.startTransaction();
+
     const userId = req.user?._id;
     // const { paymentMethod, transactionId } = req.body;
 
     const paymentMethod = 'DigitalWallet';
     const transactionId = userId;
 
-    const order = await placeOrderFromCart(userId, paymentMethod, transactionId);
+    const order = await placeOrderFromCart(session, userId, paymentMethod, transactionId);
+
+    await session.commitTransaction();
+    session.endSession();
 
     if(order){
-        return res.status(201).json({
-            message: 'Order placed successfully'
-        });
+      return res.status(201).json({
+          message: 'Order placed successfully'
+      });
     }
     res.status(400).json({
         message: 'Failed to place order'
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     next(error);
+  } finally {
+    session.endSession();
   }
 }
 
@@ -47,7 +59,10 @@ exports.getOrders = async(req, res, next) => {
 
 
 exports.updateOrder = async(req, res, next) => {
+  const session = await mongoose.startSession();
   try {
+    session.startTransaction();
+
     const userId = req.user?._id;
     const { orderId } = req.body;
 
@@ -55,7 +70,10 @@ exports.updateOrder = async(req, res, next) => {
       return res.status(400).json({ status: 'error', message: 'orderId is required' });
     }
 
-    const orders = await cancelOrder(userId, orderId);
+    const orders = await cancelOrder(session, userId, orderId);
+
+    await session.commitTransaction();
+    session.endSession();
 
     if(orders){
         return res.status(200).json({
@@ -67,7 +85,11 @@ exports.updateOrder = async(req, res, next) => {
         message: 'Failed to cancel order'
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     next(error);
+  } finally {
+    session.endSession();
   }
 }
 
@@ -94,14 +116,20 @@ exports.viewPlatformOrders = async(req, res, next) => {
 
 
 exports.updateOrderStatus = async (req, res, next) => {
+  const session = await mongoose.startSession();
   try {
+    session.startTransaction();
+
     const { orderId, shipmentStatus } = req.body;
 
     if (!orderId || !shipmentStatus) {
       return res.status(400).json({ message: "orderId and shipmentStatus are required" });
     }
 
-    const result = await updateOrderStatus(orderId, shipmentStatus);
+    const result = await updateOrderStatus(session, orderId, shipmentStatus);
+
+    await session.commitTransaction();
+    session.endSession();
 
     if(result){
         return res.status(200).json({
@@ -112,6 +140,10 @@ exports.updateOrderStatus = async (req, res, next) => {
         message: 'Failed to update order shipment status'
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     next(error);
+  } finally {
+    session.endSession();
   }
 };

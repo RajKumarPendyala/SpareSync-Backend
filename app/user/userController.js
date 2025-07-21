@@ -96,7 +96,8 @@ exports.login = async (req, res, next) => {
       return res.status(200).json({
         message: 'Login successful',
         token,
-        role : user.role
+        role : user.role,
+        id : user._id
       });
     }
     return res.status(500).json({message: 'Login failed.'});
@@ -116,7 +117,7 @@ exports.getProfileById = async (req, res, next) => {
 
     const user = await findById(
       { _id },
-      '-_id -passwordHash -isVerified -token -resetTokenExpires -createdAt -updatedAt -__v'
+      '-isVerified -passwordHash -token -resetTokenExpires -createdAt -updatedAt -__v'
     );
 
     if (!user || user.isDeleted) {
@@ -406,5 +407,53 @@ exports.verifyEmail = async(req, res, next) => {
     return res.status(400).json({ message: 'Email verification failed.' });
   }catch (error){
     next(error);
+  }
+}
+
+
+exports.credit = async(req, res, next) => {
+  try{
+    const _id = req.user?._id;
+    const { amount } = req.body;
+
+    if(_id && amount) {
+
+      const user = await findById(
+        { _id },
+        'walletAmount'
+      );
+
+      if(!user){
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
+      const total = amount + parseFloat(user.walletAmount.toString());
+
+      const updatedAmount = await findAndUpdate(
+        _id,
+        { walletAmount : total },
+        'walletAmount'
+      );
+
+      if (!updatedAmount) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
+
+      const io = req.app.get('io'); 
+      // Emit to the user (real-time update)
+      io.to(_id.toString()).emit('walletUpdated', {
+        walletAmount: total,
+      });
+
+      return res.status(200).json({
+        message: 'User amount updated successfully.',
+        updatedAmount
+      });
+    }
+    return res.status(400).json({ message: 'ID and amount required.'});
+  }
+  catch(err){
+    next(err);
   }
 }
