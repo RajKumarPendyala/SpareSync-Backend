@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.get('/', (req, res) => {
-  res.send('SpareSync API is running...');
+  res.send('PartNest API is running...');
 });
 
 app.use('/api/users', require('./user/userRoutes'));

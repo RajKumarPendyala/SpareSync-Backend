@@ -18,7 +18,8 @@ exports.addSparePart = async (req, res, next) => {
       warrentyPeriod,
       imagePaths,
     } = req.body;
-    const addedBy = req.user?._id;
+    const addedBy = req.user?._id || null;
+    const role = req.user?.role || null;
 
     const addFields = {};
 
@@ -37,7 +38,24 @@ exports.addSparePart = async (req, res, next) => {
     if (imagePaths.length) addFields.images = imagePaths;
 
     const createdSparePart = await  createSparePart(addFields);
-    
+
+    let filterSpareParts = {};
+
+    if(role === "seller"){
+        if (addedBy) filterSpareParts.addedBy = addedBy;
+    }
+    filterSpareParts.isDeleted = false;
+
+    const spareParts = await find(
+        filterSpareParts,
+        '-createdAt -updatedAt -__v'
+    );
+
+    const io = req.app.get('io');
+    io.emit('sparePart', { 
+        sparepart : spareParts || []
+    });
+
     res.status(201).json({
       message: 'Added spare part successfully',
       createdSparePart
@@ -67,6 +85,9 @@ exports.editSparePartById = async (req, res, next) => {
             isDeleted,
             imagePaths,
         } = req.body;
+        const addedBy = req.user?._id || null;
+        const role = req.user?.role || null;
+
 
         const updateFields = {};
 
@@ -95,6 +116,19 @@ exports.editSparePartById = async (req, res, next) => {
                 message: 'Spare part deleted successfully'
             })
         }
+
+        let filterSpareParts = {};
+        filterSpareParts.isDeleted = false;
+    
+        const spareParts = await find(
+            filterSpareParts,
+            '-createdAt -updatedAt -__v'
+        );
+    
+        const io = req.app.get('io');
+        io.emit('sparePart', { 
+            sparepart : spareParts || []
+        });
 
         res.status(200).json({
             message: 'Spare part edited successfully',
@@ -156,6 +190,11 @@ exports.getSparePartsWithFilter = async (req, res, next) => {
             filterSpareParts,
             '-createdAt -updatedAt -__v'
         );
+
+        const io = req.app.get('io');
+        io.emit('sparePart', { 
+            sparepart : spareParts || []
+        });
 
         res.status(200).json({
             message: 'Spare parts fetched successfully',

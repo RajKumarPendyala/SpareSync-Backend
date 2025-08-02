@@ -71,13 +71,12 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
     const user = await findByEmail(
       { email },
-      '_id name passwordHash role image.path isverified'
+      '_id name passwordHash role image.path isVerified isDeleted'
     );
     
-    if (!user || user.isDeleted) {
+    if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
@@ -96,6 +95,7 @@ exports.login = async (req, res, next) => {
       return res.status(200).json({
         message: 'Login successful',
         token,
+        isDeleted: user.isDeleted,
         role : user.role,
         id : user._id
       });
@@ -355,7 +355,7 @@ exports.updateUserPassword = async(req, res, next) => {
     if(otp){
       const currentDate = new Date();
       if ( otp != user.token || user.resetTokenExpires < currentDate) {
-        return res.status(400).json({ message: 'Invalid OTP or OTP expried.' });
+        return res.status(400).json({ message: 'Invalid or expried OTP.' });
       }
     }
 

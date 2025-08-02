@@ -29,7 +29,6 @@ exports.find = async (filter, projection = null) => {
       return {
         ...part.toObject(),
         reviews,
-        reviews,
         averageRating: parseFloat(averageRating.toFixed(1))
       };
     })
