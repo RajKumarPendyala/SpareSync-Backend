@@ -15,6 +15,7 @@ io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId;
   if (userId) {
     socket.join(userId); // join user-specific room
+    console.log('User connected');
   }
 
   socket.on('disconnect', () => {

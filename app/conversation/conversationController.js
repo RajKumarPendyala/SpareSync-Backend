@@ -2,7 +2,7 @@ const { sendMessage, getConversation, deleteConversation, getConversations } = r
 
 exports.sendMessage = async (req, res, next) => {
   try {
-    let senderId = req.user._id;
+    let senderId = req.user?._id;
     let { receiverId, text, senderId2 } = req.body;
 
     if (senderId2) {
@@ -11,14 +11,17 @@ exports.sendMessage = async (req, res, next) => {
     }
 
     const conversation = await sendMessage(senderId, receiverId, text);
-
-    req.app.get('io').to(receiverId.toString()).emit('newMessage', {
-        conversationId: conversation._id,
-        message: conversation.messages[conversation.messages.length - 1]
-    });
-
+  
     if(conversation){
-        return res.status(200).json({ message: 'Message sent', conversation });
+      const io = req.app.get('io');
+      io.to(receiverId.toString()).to(senderId.toString()).emit('conversation', { conversation });
+
+      const conversations = await getConversations({ userId: senderId });
+      if(conversations){
+        io.to(receiverId.toString()).to(senderId.toString()).emit('conversations', { conversations, userId: senderId });
+      }
+
+      return res.status(200).json({ message: 'Message sent', conversation });
     }
     res.status(400).json({ message: 'Message not sent', conversation });
   } catch (error) {

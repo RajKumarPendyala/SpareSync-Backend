@@ -102,7 +102,9 @@ exports.editSparePartById = async (req, res, next) => {
         if (brand) updateFields.brand = brand;
         if (gadgetType) updateFields.gadgetType = gadgetType;
         if (warrentyPeriod) updateFields.warrentyPeriod = warrentyPeriod;
-        if (imagePaths?.length) updateFields.images = imagePaths;
+        if (imagePaths !== undefined) {
+            updateFields.images = imagePaths;
+        }
         if (isDeleted !== undefined) updateFields.isDeleted = isDeleted;
 
         const updatedSparePart = await findByIdAndUpdate(

@@ -126,15 +126,18 @@ exports.updateOrderStatus = async(session, orderId, shipmentStatus) => {
     });
 
     for (const item of order.items) {
-      const sparePart = await SparePart.findById(item.sparePartId).select('addedBy price');
+      const sparePart = await SparePart.findById(item.sparePartId).select('addedBy price discount');
 
       if (!sparePart || !sparePart.addedBy) continue;
 
       const sellerId = sparePart.addedBy.toString();
       const quantity = item.quantity || 0;
       const price = parseFloat(sparePart.price?.toString() || "0");
+      const discount = parseFloat(sparePart.discount?.toString() || "0");
 
-      const grossAmount = quantity * price;
+      const total = parseFloat((price * (1 - discount / 100)).toFixed(2));
+
+      const grossAmount = quantity * total;
       const platformFee = grossAmount * 0.10;
       const sellerAmount = parseFloat((grossAmount - platformFee).toFixed(2));
 
