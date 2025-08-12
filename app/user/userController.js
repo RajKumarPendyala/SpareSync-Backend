@@ -348,7 +348,7 @@ exports.updateUserPassword = async(req, res, next) => {
     }
 
     if(currentPassword) {
-      const isMatch = verifyPassword(currentPassword, user.passwordHash);
+      const isMatch = await verifyPassword(currentPassword, user.passwordHash);
       if (!isMatch) return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
