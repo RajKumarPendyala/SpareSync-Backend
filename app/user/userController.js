@@ -201,7 +201,8 @@ exports.getUsersWithFilter = async (req, res, next) => {
 
     const filter = {
       isDeleted: false,
-      isVerified: true
+      isVerified: true,
+      role: { $ne: 'admin' }
     };
 
     if (role) filter.role = role;

@@ -37,6 +37,16 @@ exports.placeOrderFromCart = async (session, userId, paymentMethod, transactionI
 
   const order = await Order.create([orderData], { session }); // use array when using session
 
+  for (const item of cart.items) {
+    await SparePart.findByIdAndUpdate(
+      item.sparePartId,
+      { $inc: { quantity: -item.quantity } },
+      { session, new: true, runValidators: true }
+    );
+  }
+
+  // await broadcastSpareParts(req.app.get('io'));
+
   await Cart.deleteOne({ userId }).session(session);
 
   return order[0]; // since we used create([...])
@@ -48,14 +58,16 @@ exports.getOrdersByUser = async(userId, shipmentStatus) => {
   const filter = {};
   if (shipmentStatus) {
     filter.shipmentStatus = shipmentStatus;
+  }
+  if (userId) {
     filter.userId = userId;
   }
-    
+ 
   return await Order.find(filter).select('-userId -__v').sort({ createdAt: -1 }).populate('items.sparePartId'); 
 }
 
 
-exports.cancelOrder = async(session, userId, orderId) => {
+exports.cancelOrder = async(session, userId, orderId, req) => {
   const order = await Order.findOne({ _id: orderId, userId }).session(session);
 
   if (!order) {
@@ -69,6 +81,14 @@ exports.cancelOrder = async(session, userId, orderId) => {
   const fAmount = order.finalAmount;
 
   await transaction(session, adminId, userId, fAmount);
+
+  for (const item of order.items) {
+    await SparePart.findByIdAndUpdate(
+      item.sparePartId,
+      { $inc: { quantity: item.quantity } },
+      { session, new: true, runValidators: true }
+    );
+  }
 
   order.shipmentStatus = 'cancelled';
   await order.save({ session });
@@ -103,30 +123,20 @@ exports.updateOrderStatus = async(session, orderId, shipmentStatus) => {
     await transaction(session, adminId, userId, fAmount);
   }
 
-  if (shipmentStatus === "shipped" || shipmentStatus === "delivered" ) {
-    for (const item of order.items) {
-      await SparePart.findByIdAndUpdate(
-        item.sparePartId,
-        { $inc: { quantity: -item.quantity } },
-        { new: true, runValidators: true }
-      );
-    }
-  }
-
   if (shipmentStatus === "delivered" ) {
 
     const totalAmount = parseFloat(order.totalAmount?.toString() || "0");
     const discount = parseFloat(order.discountAmount?.toString() || "0");
     const netProfit = totalAmount - discount;
 
-    await FinancialReport.create({
+    await FinancialReport.create([{
       totalSales: totalAmount,
       totalOrders: 1,
       netProfit
-    });
+    }], { session });
 
     for (const item of order.items) {
-      const sparePart = await SparePart.findById(item.sparePartId).select('addedBy price discount');
+      const sparePart = await SparePart.findById(item.sparePartId).select('addedBy price discount').session(session);;
 
       if (!sparePart || !sparePart.addedBy) continue;
 

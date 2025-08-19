@@ -1,4 +1,5 @@
 const { placeOrderFromCart, getOrdersByUser, cancelOrder, getPlatformOrders, updateOrderStatus } = require('./orderService');
+const { broadcastSpareParts } = require('../../utils/broadcastSpareParts');
 const mongoose = require('mongoose');
 
 
@@ -19,6 +20,7 @@ exports.placeOrder = async(req, res, next) => {
     session.endSession();
 
     if(order){
+      await broadcastSpareParts(req.app.get('io'));
       return res.status(201).json({
           message: 'Order placed successfully'
       });
@@ -70,12 +72,13 @@ exports.updateOrder = async(req, res, next) => {
       return res.status(400).json({ status: 'error', message: 'orderId is required' });
     }
 
-    const orders = await cancelOrder(session, userId, orderId);
+    const orders = await cancelOrder(session, userId, orderId, req);
 
     await session.commitTransaction();
     session.endSession();
 
     if(orders){
+      await broadcastSpareParts(req.app.get('io'));
         return res.status(200).json({
             message: 'Order cancelled successfully',
             data: orders
