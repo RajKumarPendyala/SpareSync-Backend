@@ -20,6 +20,12 @@ exports.addItem = async (req, res, next) => {
       const existingItem = findItem( cart, sparePartId );
 
       if (existingItem) {
+        if (existingItem.quantity >= 5) {
+          return res.status(400).json({
+            message: 'You cannot add more than 5 units of the same product.'
+          });
+        }
+
         existingItem.quantity += 1;
         existingItem.subTotal = mongoose.Types.Decimal128.fromString(
           (parseFloat(sparePart.price?.toString() || '0') * existingItem.quantity).toFixed(2)
@@ -29,9 +35,9 @@ exports.addItem = async (req, res, next) => {
         );
       } 
       else {
-        const price = parseFloat(sparePart.price?.toString() || '0');
-        const discount = parseFloat(sparePart.discount?.toString() || '0');
-        const subTotalDiscount = ((price * discount) / 100).toFixed(2);
+        // const price = parseFloat(sparePart.price?.toString() || '0');
+        // const discount = parseFloat(sparePart.discount?.toString() || '0');
+        // const subTotalDiscount = ((price * discount) / 100).toFixed(2);
         cart.items.push({
           sparePartId,
           quantity: 1,
@@ -119,6 +125,10 @@ exports.updateItem = async(req, res, next) => {
   try {
     const userId = req.user?._id;
     const { sparePartId, quantity } = req.body;
+
+    if (quantity < 1 || quantity > 5) {
+      return res.status(400).json({ message: 'Quantity must be between 1 and 5.' });
+    }
 
     const updatedCart = await updateCartItemQuantity(userId, sparePartId, quantity);
 
